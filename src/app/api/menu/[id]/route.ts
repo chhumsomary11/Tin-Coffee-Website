@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 import connectDB from "@/lib/db";
-import { MenuCategory, MenuAddOn } from "@/types/data";
 import MenuItem from "@/models/MenuItem";
 
 interface RouteContext {
@@ -10,31 +9,14 @@ interface RouteContext {
   }>;
 }
 
-interface CreateMenuItemBody {
-  itemId: string;
-  name: string;
-  category: MenuCategory;
-  price: number;
-  description?: string;
-  available: boolean;
-  imageUrl?: string;
-  isNewMenuItem?: boolean;
-  addOns?: MenuAddOn[];
-  createdAt?: Date;
-  updatedAt?: Date;
-}
-
-// GET /api/menu/:id - Get single menu item by itemId or ObjectId
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
     await connectDB();
 
     const { id } = await context.params;
 
-    // Try to find by itemId first (human-readable ID like "menu_001")
     let menuItem = await MenuItem.findOne({ itemId: id });
 
-    // If not found and id is a valid ObjectId, try finding by _id
     if (!menuItem && mongoose.Types.ObjectId.isValid(id)) {
       menuItem = await MenuItem.findById(id);
     }
@@ -43,16 +25,22 @@ export async function GET(request: NextRequest, context: RouteContext) {
       return NextResponse.json(
         {
           success: false,
-          message: "Menu item not found",
+          error: {
+            code: "MENU_ITEM_NOT_FOUND",
+            message: "Menu item was not found",
+          },
         },
         { status: 404 },
       );
     }
 
+    const item = menuItem.toObject();
+    item.isNew = item.isNewMenuItem ?? false;
+
     return NextResponse.json(
       {
         success: true,
-        data: menuItem,
+        data: item,
       },
       { status: 200 },
     );
@@ -62,36 +50,40 @@ export async function GET(request: NextRequest, context: RouteContext) {
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to fetch menu item",
+        error: {
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Internal server error",
+        },
       },
       { status: 500 },
     );
   }
 }
 
-// PATCH /api/menu/:id
 export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
     await connectDB();
 
     const { id } = await context.params;
 
-    // Find by itemId first, then by ObjectId
     let menuItem = await MenuItem.findOne({ itemId: id });
-    let queryId = id;
+    let queryId: mongoose.Types.ObjectId | string = id;
 
     if (!menuItem && mongoose.Types.ObjectId.isValid(id)) {
       menuItem = await MenuItem.findById(id);
-      queryId = id; // Use ObjectId for update
+      queryId = id;
     } else if (menuItem) {
-      queryId = menuItem._id; // Use ObjectId for update
+      queryId = menuItem._id;
     }
 
     if (!menuItem) {
       return NextResponse.json(
         {
           success: false,
-          message: "Menu item not found",
+          error: {
+            code: "MENU_ITEM_NOT_FOUND",
+            message: "Menu item was not found",
+          },
         },
         { status: 404 },
       );
@@ -108,7 +100,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         description: body.description,
         imageUrl: body.imageUrl,
         available: body.available,
-        isNewMenuItem: body.isNewMenuItem,
+        isNewMenuItem: body.isNew,
         addOns: body.addOns,
       },
       {
@@ -121,7 +113,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       return NextResponse.json(
         {
           success: false,
-          message: "Menu item not found",
+          error: {
+            code: "MENU_ITEM_NOT_FOUND",
+            message: "Menu item was not found",
+          },
         },
         { status: 404 },
       );
@@ -130,8 +125,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     return NextResponse.json(
       {
         success: true,
-        message: "Menu item updated successfully",
         data: updatedMenuItem,
+        message: "Menu item updated successfully",
       },
       { status: 200 },
     );
@@ -141,23 +136,24 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to update menu item",
+        error: {
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Internal server error",
+        },
       },
       { status: 500 },
     );
   }
 }
 
-// DELETE /api/menu/:id
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     await connectDB();
 
     const { id } = await context.params;
 
-    // Find by itemId first, then by ObjectId
     let menuItem = await MenuItem.findOne({ itemId: id });
-    let queryId = id;
+    let queryId: mongoose.Types.ObjectId | string = id;
 
     if (!menuItem && mongoose.Types.ObjectId.isValid(id)) {
       menuItem = await MenuItem.findById(id);
@@ -170,23 +166,16 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       return NextResponse.json(
         {
           success: false,
-          message: "Menu item not found",
+          error: {
+            code: "MENU_ITEM_NOT_FOUND",
+            message: "Menu item was not found",
+          },
         },
         { status: 404 },
       );
     }
 
-    const deletedMenuItem = await MenuItem.findByIdAndDelete(queryId);
-
-    if (!deletedMenuItem) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Menu item not found",
-        },
-        { status: 404 },
-      );
-    }
+    await MenuItem.findByIdAndDelete(queryId);
 
     return NextResponse.json(
       {
@@ -201,7 +190,10 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to delete menu item",
+        error: {
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Internal server error",
+        },
       },
       { status: 500 },
     );

@@ -2,6 +2,7 @@ import mongoose, { Schema, Document } from "mongoose";
 import { RoomType } from "@/types/data";
 
 export interface IRoom extends Document {
+  _id: mongoose.Types.ObjectId;
   name: string;
   type: RoomType;
   capacity: number;
@@ -15,6 +16,10 @@ export interface IRoom extends Document {
 
 const RoomSchema = new Schema<IRoom>(
   {
+    _id: {
+      type: Schema.Types.ObjectId,
+      auto: true,
+    },
     name: {
       type: String,
       required: [true, "Room name is required"],

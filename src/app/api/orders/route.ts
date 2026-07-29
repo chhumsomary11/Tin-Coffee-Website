@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import mongoose from "mongoose";
 import connectDB from "@/lib/db";
 import Order from "@/models/Order";
+
+//Note: We immport MenuItem model from mongoose to find the item that matches _id and itemId
 import MenuItem from "@/models/MenuItem";
+
 import type {
   OrderStatus,
   Temperature,
   SugarLevel,
   IceLevel,
-} from "@/types/data";
+} from "@/types/order";
 
 interface CreateOrderAddOnRequest {
   addOnId: string;
@@ -16,7 +18,6 @@ interface CreateOrderAddOnRequest {
 
 interface CreateOrderItemRequest {
   itemId?: string;
-  menuItemId?: string;
   quantity: number;
   temperature?: Temperature;
   sugarLevel?: SugarLevel;
@@ -152,7 +153,7 @@ export async function POST(request: NextRequest) {
 
     for (const item of body.items) {
       // Accept both itemId (new) and menuItemId (legacy) for backward compatibility
-      const itemId = item.itemId || item.menuItemId;
+      const itemId = item.itemId;
 
       if (!itemId || !item.quantity || item.quantity < 1) {
         return NextResponse.json(
@@ -160,19 +161,17 @@ export async function POST(request: NextRequest) {
             success: false,
             error: {
               code: "VALIDATION_ERROR",
-              message: "Invalid item data: itemId/menuItemId and quantity are required",
+              message:
+                "Invalid item data: itemId/menuItemId and quantity are required",
             },
           },
           { status: 400 },
         );
       }
 
-      // Fetch menu item from database to get current price
-      // Query by itemId (human-readable like "menu_001") first, then fallback to ObjectId
-      let menuItem = await MenuItem.findOne({ itemId });
-      if (!menuItem && mongoose.Types.ObjectId.isValid(itemId)) {
-        menuItem = await MenuItem.findById(itemId);
-      }
+      //Note: We are using findBy Id here to find the menu item that matches the _id of the MenuItem model
+      //Note: Generatlly findbyId() is used to query MongoDB's _id field
+      let menuItem = await MenuItem.findById(itemId);
       if (!menuItem) {
         return NextResponse.json(
           {
@@ -246,7 +245,7 @@ export async function POST(request: NextRequest) {
       totalAmount += itemPrice;
 
       orderItems.push({
-        itemId: menuItem.itemId,
+        itemId: menuItem._id.toString(), // store MongoDB _id as string for population
         name: menuItem.name,
         price: menuItem.price,
         quantity: item.quantity,

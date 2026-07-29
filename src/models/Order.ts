@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
-import { OrderStatus, Temperature, SugarLevel, IceLevel } from "../types/data";
+import { OrderStatus, Temperature, SugarLevel, IceLevel } from "../types/order";
 
 // OrderItem is embedded inside Order
 // It does NOT get its own collection
@@ -48,7 +48,6 @@ const OrderItemSchema = new Schema<IOrderItem>(
   {
     itemId: {
       type: String,
-      // ref: "MenuItem", // references the MenuItem collection
       required: true,
     },
     name: {

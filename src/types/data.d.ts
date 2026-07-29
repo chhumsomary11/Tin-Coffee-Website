@@ -1,59 +1,6 @@
-export type MenuCategory = "COFFEE" | "SIGNATURE" | "BAKERY" | "FOOD";
 
-export type Temperature = "hot" | "iced";
-export type SugarLevel = "none" | "less" | "regular" | "extra";
-export type IceLevel = "less" | "regular" | "extra";
-export type OrderStatus = "pending" | "preparing" | "ready" | "completed";
 
-export interface MenuAddOn {
-  _id: string;
-  name: string;
-  price: number;
-  available: boolean;
-}
 
-// Represent a menu item in the database
-export interface MenuItem {
-  _id: string;
-  itemId: string; // Human-readable ID like "menu_001"
-  name: string;
-  category: MenuCategory;
-  price: number;
-  description: string;
-  imageUrl?: string;
-  available: boolean;
-  isNew: boolean;
-  addOns?: MenuAddOn[];
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-// One item inside a customer's order
-// Includes all customization choices
-export interface OrderItem {
-  menuItemId: string;
-  name: string; // snapshot at time of order
-  price: number; // snapshot at time of order
-  quantity: number;
-  temperature: Temperature;
-  sugarLevel: SugarLevel;
-  iceLevel: IceLevel;
-  addOns: { addOnId: string; name: string; price: number }[];
-  note: string;
-}
-
-// Represents a customer's order that includes all the OrderItems they have chosen
-export interface Order {
-  _id: string;
-  customerName: string;
-  phone: string;
-  items: OrderItem[];
-  pickupTime: string;
-  totalAmount: number;
-  status: OrderStatus;
-  specialNote: string;
-  createdAt: string;
-}
 
 export type RoomType = "SMALL" | "CONFERENCE";
 export type BookingStatus = "pending" | "confirmed" | "rejected";

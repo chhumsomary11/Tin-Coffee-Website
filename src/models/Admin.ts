@@ -48,6 +48,7 @@ const AdminSchema = new Schema<IAdmin>(
 AdminSchema.index({ email: 1 }, { unique: true });
 AdminSchema.index({ username: 1 }, { unique: true });
 
-const Admin = mongoose.models.Admin || mongoose.model<IAdmin>("Admin", AdminSchema);
+const Admin =
+  mongoose.models.Admin || mongoose.model<IAdmin>("Admin", AdminSchema);
 
 export default Admin;

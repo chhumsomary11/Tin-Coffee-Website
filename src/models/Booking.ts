@@ -2,6 +2,7 @@ import mongoose, { Schema, Document } from "mongoose";
 import { BookingStatus } from "@/types/data";
 
 export interface IBooking extends Document {
+  //Note: roomId here is equal to the _id of the Room model
   roomId: mongoose.Types.ObjectId;
   customerName: string;
   phone: string;
