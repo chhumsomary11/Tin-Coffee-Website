@@ -1,3 +1,5 @@
+//Purpose: Backend Route Handler
+
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import Booking from "@/models/Booking";

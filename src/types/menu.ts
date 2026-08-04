@@ -1,6 +1,13 @@
+import { Menu } from "lucide-react";
+
 export type MenuCategory = "COFFEE" | "SIGNATURE" | "BAKERY" | "FOOD";
 
-
+export interface MenuFilters {
+  category?: MenuCategory | "ALL";
+  search?: string;
+  available?: boolean;
+  isNew?: boolean;
+}
 
 export interface MenuAddOn {
   _id: string;
